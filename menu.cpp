@@ -2661,7 +2661,7 @@ void HandleUI(void)
 						fs_MenuSelect = MENU_GENERIC_FILE_SELECTED;
 						fs_MenuCancel = MENU_GENERIC_MAIN1;
 						strcpy(fs_pFileExt, ext);
-
+						
 						load_addr = 0;
 						if (substrcpy(s, p, 3))
 						{
@@ -2923,7 +2923,7 @@ void HandleUI(void)
 						pcecd_set_image(0, "");
 						pcecd_reset();
 					}
-					if (!store_name) user_io_store_filename(selPath);
+					if (!store_name) user_io_store_filename(selPath);					
 					if (is_n64())
 					{
 						uint32_t n64_crc;
@@ -2973,11 +2973,19 @@ void HandleUI(void)
 					}
 					else
 					{
-						user_io_file_tx(selPath, idx, opensave, 0, 0, load_addr);
-						if (!store_name)
+						if (is_groovy())
 						{
-							game_docs_init(selPath, user_io_get_file_crc());
-							if (user_io_use_cheats()) cheats_init(selPath, user_io_get_file_crc());
+							// Groovy: the PC loads the selected file (GroovyMiSTer Command, GMC)
+							groovy_user_io_file_gmc(selPath);
+						}
+						else
+						{
+							user_io_file_tx(selPath, idx, opensave, 0, 0, load_addr);
+							if (!store_name)
+							{
+								game_docs_init(selPath, user_io_get_file_crc());
+								if (user_io_use_cheats()) cheats_init(selPath, user_io_get_file_crc());
+							}
 						}
 					}
 				}
@@ -8544,10 +8552,10 @@ void HandleUI(void)
 				menustate = MENU_FILE_SELECT1;
 				break;
 			}
-		}
-
+		}				
+		
 		if (isXmlName(Selected_tmp))
-		{
+		{ 
 			// find the RBF file from the XML
 			xml_load(getFullPath(Selected_tmp));
 		}
@@ -8557,7 +8565,7 @@ void HandleUI(void)
 		}
 		break;
 
-	case MENU_CORE_FILE_SELECTED2:
+	case MENU_CORE_FILE_SELECTED2:		
 		fpga_load_rbf(Selected_tmp, selPath);
 		menustate = MENU_NONE1;
 		break;

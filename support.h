@@ -96,3 +96,6 @@
 
 // NEC PC-FX support
 #include "support/pcfx/pcfx.h"
+
+// GROOVY support
+#include "support/groovy/groovy.h"

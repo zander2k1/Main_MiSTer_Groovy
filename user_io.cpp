@@ -478,6 +478,13 @@ char is_3do()
 	return (is_3do_type == 1);
 }
 
+static int is_groovy_type = 0;
+char is_groovy()
+{
+	if (!is_groovy_type) is_groovy_type = strcasecmp(orig_name, "Groovy") ? 2 : 1;
+	return (is_groovy_type == 1);
+}
+
 static int is_no_type = 0;
 static int disable_osd = 0;
 char has_menu()
@@ -489,7 +496,7 @@ char has_menu()
 }
 
 void user_io_read_core_name()
-{
+{	
 	is_menu_type = 0;
 	is_x86_type  = 0;
 	is_no_type   = 0;
@@ -518,6 +525,7 @@ void user_io_read_core_name()
 	is_pcfx_type = 0;
 	is_n64_type = 0;
 	is_uneon_type = 0;
+	is_groovy_type = 0;
 	core_name[0] = 0;
 
 	char *p = user_io_get_confstr(0);
@@ -525,7 +533,7 @@ void user_io_read_core_name()
 
 	// get core name
 	if (ovr_name[0]) strcpy(core_name, ovr_name);
-	else if (orig_name[0]) strcpy(core_name, p);
+	else if (orig_name[0]) strcpy(core_name, p);	
 
 	printf("Core name is \"%s\"\n", core_name);
 }
@@ -1878,6 +1886,11 @@ void user_io_l_analog_joystick(unsigned char joystick, char valueX, char valueY)
 		}
 		DisableIO();
 	}
+	
+	if (is_groovy())
+	{
+		groovy_send_analog(joystick, 0, valueX, valueY);
+	}
 }
 
 void user_io_r_analog_joystick(unsigned char joystick, char valueX, char valueY)
@@ -1894,6 +1907,11 @@ void user_io_r_analog_joystick(unsigned char joystick, char valueX, char valueY)
 			spi8(valueY);
 		}
 		DisableIO();
+	}
+	
+	if (is_groovy())
+	{
+		groovy_send_analog(joystick, 1, valueX, valueY);
 	}
 }
 
@@ -1927,6 +1945,11 @@ void user_io_digital_joystick(unsigned char joystick, uint32_t map, int newdir)
 	if (!is_minimig() && joy_transl == 1 && newdir)
 	{
 		user_io_l_analog_joystick(joystick, (map & 2) ? 128 : (map & 1) ? 127 : 0, (map & 8) ? 128 : (map & 4) ? 127 : 0);
+	}
+
+	if (is_groovy())
+	{
+		groovy_send_joystick(joystick, map);
 	}
 
 	register_activity();
@@ -4086,6 +4109,7 @@ void user_io_poll()
 	if (is_atari800()) atari800_poll();
 	if (is_atari5200()) atari5200_poll();
 	if (is_3do()) p3do_poll();
+	if (is_groovy()) groovy_poll();
 	process_ss(0);
 
 	if (cfg.hdmi_off)
@@ -4116,7 +4140,7 @@ void user_io_poll()
 }
 
 static void send_keycode(unsigned short key, int press)
-{
+{	
 	if (is_pcxt())
 	{
 		//WIN+... we override this hotkey in the core.
@@ -4231,8 +4255,13 @@ static void send_keycode(unsigned short key, int press)
 
 	if (core_type == CORE_TYPE_8BIT)
 	{
+		if (is_groovy())
+		{
+			groovy_send_keyboard(key, press);
+		}
+		
 		uint32_t code = get_ps2_code(key);
-		if (code == NONE) return;
+		if (code == NONE) return;				
 
 		//pause
 		if ((code & 0xff) == 0xE1)
@@ -4398,6 +4427,11 @@ void user_io_mouse(unsigned char b, int16_t x, int16_t y, int16_t w)
 				spi_w(ps2_mouse[1] | ((((uint16_t)b) << 5) & 0xF00));
 				spi_w(ps2_mouse[2] | ((((uint16_t)b) << 1) & 0x100));
 				DisableIO();
+				
+				if (is_groovy())
+				{
+					groovy_send_mouse(ps2_mouse[0], ps2_mouse[1], ps2_mouse[2], (unsigned char) w);					
+				}
 			}
 		}
 		return;
@@ -4462,7 +4496,7 @@ void user_io_kbd(uint16_t key, int press)
 	register_activity();
 
 	if(is_menu()) spi_uio_cmd(UIO_KEYBOARD); //ping the Menu core to wakeup
-
+	
 	// Win+PrnScr or Alt/Win+ScrLk - screen shot
 	bool key_WinPrnScr = (key == KEY_SYSRQ && (get_key_mod() & (RGUI | LGUI)));
 	// Excluding scroll lock for PS/2 so Win+ScrLk can be used to change the emu mode.
