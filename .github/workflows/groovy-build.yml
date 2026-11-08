@@ -54,13 +54,17 @@ jobs:
           exit "$code"
         fi
         cp bin/MiSTer MiSTer_groovy
-        ls -l MiSTer_groovy
+        # Helper that starts the Groovy core when Groovy Dolphin or Groovy OpenMW asks for it.
+        arm-none-linux-gnueabihf-gcc -O2 -Wall -static -o groovy_wake tools/groovy_wake/groovy_wake.c
+        ls -l MiSTer_groovy groovy_wake
 
     - name: Store the build
       uses: actions/upload-artifact@v4
       with:
         name: MiSTer_groovy
-        path: MiSTer_groovy
+        path: |
+          MiSTer_groovy
+          groovy_wake
         if-no-files-found: error
         retention-days: 30
 
@@ -70,9 +74,9 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         gh release delete latest --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
-        gh release create latest MiSTer_groovy \
+        gh release create latest MiSTer_groovy groovy_wake \
           --repo "$GITHUB_REPOSITORY" \
           --target "$GITHUB_SHA" \
           --title "Latest build" \
           --latest \
-          --notes "MiSTer_groovy built from commit ${GITHUB_SHA:0:10}: the current official MiSTer main program with Groovy_MiSTer support. Copy it to /media/fat on the SD card (keep your old MiSTer_groovy as a backup)."
+          --notes "MiSTer_groovy built from commit ${GITHUB_SHA:0:10}: the current official MiSTer main program with Groovy_MiSTer support. Copy it to /media/fat on the SD card (keep your old MiSTer_groovy as a backup). groovy_wake: optional helper that lets Groovy Dolphin and Groovy OpenMW start the Groovy core from the PC; see the README."

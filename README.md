@@ -6,7 +6,7 @@ The Groovy core needs its own version of the main program (`MiSTer_groovy`), whi
 
 ## Download
 
-**[MiSTer_groovy](https://github.com/zander2k1/Main_MiSTer_Groovy/releases/download/latest/MiSTer_groovy)** (built automatically from this repo)
+**[MiSTer_groovy](https://github.com/zander2k1/Main_MiSTer_Groovy/releases/download/latest/MiSTer_groovy)** (built automatically from this repo), plus the optional **[groovy_wake](https://github.com/zander2k1/Main_MiSTer_Groovy/releases/download/latest/groovy_wake)** helper (see below)
 
 ## Install
 
@@ -24,6 +24,21 @@ The Groovy core needs its own version of the main program (`MiSTer_groovy`), whi
 This only affects the Groovy core. Every other core keeps using the normal MiSTer program.
 
 The optional XDP network mode (`MiSTer_groovy_XDP`, which needs a patched Linux kernel) is still in the code but is not built yet.
+
+## Start the Groovy core from the PC (optional)
+
+`groovy_wake` is a small helper that lets Groovy Dolphin and Groovy OpenMW start the Groovy core for you. When they can't reach the MiSTer, they send a short "start Groovy" message to UDP port 32110. The helper then loads the newest `Groovy_*.rbf` in `/media/fat/_Utility`, the same way MiSTer scripts load cores. It only ever loads the Groovy core and ignores anything else.
+
+1. Download **[groovy_wake](https://github.com/zander2k1/Main_MiSTer_Groovy/releases/download/latest/groovy_wake)** and copy it to `/media/fat/linux` (binary transfer mode).
+2. Add this line to `/media/fat/linux/user-startup.sh` (create the file if it doesn't exist):
+
+   ```
+   /media/fat/linux/groovy_wake > /dev/null 2>&1 &
+   ```
+
+3. In a terminal on the MiSTer, run `chmod +x /media/fat/linux/groovy_wake`, then reboot the MiSTer.
+
+If a different core is running when you start Groovy Dolphin or Groovy OpenMW, the MiSTer switches to the Groovy core.
 
 ## Credits
 
