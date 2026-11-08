@@ -6,7 +6,7 @@ The Groovy core needs its own version of the main program (`MiSTer_groovy`), whi
 
 ## Download
 
-**[MiSTer_groovy](https://github.com/zander2k01/Main_MiSTer_Groovy/releases/download/latest/MiSTer_groovy)** (built automatically from this repo)
+**[MiSTer_groovy](https://github.com/zander2k1/Main_MiSTer_Groovy/releases/download/latest/MiSTer_groovy)** (built automatically from this repo)
 
 ## Install
 

@@ -3,7 +3,7 @@
 #
 # Every successful build of master replaces the "latest" release, so this link always has the
 # newest file:
-# https://github.com/zander2k01/Main_MiSTer_Groovy/releases/download/latest/MiSTer_groovy
+# https://github.com/zander2k1/Main_MiSTer_Groovy/releases/download/latest/MiSTer_groovy
 
 name: Build MiSTer_groovy
 
