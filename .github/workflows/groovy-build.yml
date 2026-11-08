@@ -1,0 +1,78 @@
+# Builds MiSTer_groovy: the MiSTer main program with psakhis's Groovy_MiSTer support, on top of
+# the current official Main_MiSTer.
+#
+# Every successful build of master replaces the "latest" release, so this link always has the
+# newest file:
+# https://github.com/zander2k01/Main_MiSTer_Groovy/releases/download/latest/MiSTer_groovy
+
+name: Build MiSTer_groovy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write  # to update the "latest" release
+
+concurrency:
+  group: groovy-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Same compiler the official MiSTer builds use (see .devcontainer/Dockerfile).
+    - name: Cache the ARM compiler
+      id: toolchain-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/gcc-arm
+        key: gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf
+
+    - name: Download the ARM compiler
+      if: steps.toolchain-cache.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p ~/gcc-arm
+        wget -qO- "https://developer.arm.com/-/media/Files/downloads/gnu-a/10.2-2020.11/binrel/gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf.tar.xz?revision=d0b90559-3960-4e4b-9297-7ddbc3e52783&rev=d0b9055939604e4b92977ddbc3e52783&hash=0074C1529DE90C98726B80ED3EE0776C" \
+          | tar -xJ -C ~/gcc-arm --strip-components=1
+
+    - name: Build
+      run: |
+        export PATH="$HOME/gcc-arm/bin:$PATH"
+        arm-none-linux-gnueabihf-gcc --version | head -1
+        make -j"$(nproc)" 2>&1 | tee build-output.txt
+        code=${PIPESTATUS[0]}
+        if [ "$code" -ne 0 ]; then
+          # Show compiler errors as annotations, so they appear on the commit.
+          grep -E 'error' build-output.txt | head -30 | sed 's/^/::error::/'
+          exit "$code"
+        fi
+        cp bin/MiSTer MiSTer_groovy
+        ls -l MiSTer_groovy
+
+    - name: Store the build
+      uses: actions/upload-artifact@v4
+      with:
+        name: MiSTer_groovy
+        path: MiSTer_groovy
+        if-no-files-found: error
+        retention-days: 30
+
+    - name: Update the "latest" release
+      if: github.ref == 'refs/heads/master'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh release delete latest --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+        gh release create latest MiSTer_groovy \
+          --repo "$GITHUB_REPOSITORY" \
+          --target "$GITHUB_SHA" \
+          --title "Latest build" \
+          --latest \
+          --notes "MiSTer_groovy built from commit ${GITHUB_SHA:0:10}: the current official MiSTer main program with Groovy_MiSTer support. Copy it to /media/fat on the SD card (keep your old MiSTer_groovy as a backup)."
