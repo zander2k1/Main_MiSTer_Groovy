@@ -2,6 +2,8 @@
 
 This is the MiSTer main program with [Groovy_MiSTer](https://github.com/psakhis/Groovy_MiSTer) support, kept up to date with the official [Main_MiSTer](https://github.com/MiSTer-devel/Main_MiSTer).
 
+**Two parts:** the Groovy setup on a MiSTer has two pieces. This repo is the program that runs on the MiSTer's Linux side (`MiSTer_groovy`, plus the optional `groovy_wake` helper) and handles the network. The FPGA core itself (`Groovy_*.rbf`), which outputs the picture and sound to the CRT, is in [Groovy_MiSTer](https://github.com/zander2k1/Groovy_MiSTer). You need both.
+
 The Groovy core needs its own version of the main program (`MiSTer_groovy`), which receives video, audio and input over the network from programs like GroovyMAME, Groovy Dolphin and Groovy OpenMW. psakhis made it from the official program in 2024. He passed away later that year, so his version stopped receiving the official updates. This repo moves his Groovy changes onto the current official code.
 
 ## Download
