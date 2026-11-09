@@ -1171,7 +1171,28 @@ static void setInit(uint8_t compression, uint8_t audio_rate, uint8_t audio_chan,
   		int len = 0;
   		if (!doXDPServer)
   		{
-  			len = recvfrom(sockfdInputs, recvbuf, 1, 0, (struct sockaddr *)&clientaddrInputs, &clilen);
+  			// Read every waiting hello and keep the newest. Hellos from earlier connections (a program
+  			// that was closed, or retried before the core was ready) stay queued on this socket, and
+  			// using the oldest one sent the controllers to a port nobody listens on any more.
+  			struct sockaddr_in newest;
+  			socklen_t newestLen = sizeof(newest);
+  			int got = 0;
+  			for (;;)
+  			{
+  				struct sockaddr_in from;
+  				socklen_t fromLen = sizeof(from);
+  				int n = recvfrom(sockfdInputs, recvbuf, 1, 0, (struct sockaddr *)&from, &fromLen);
+  				if (n < 0) break;
+  				newest = from;
+  				newestLen = fromLen;
+  				got = 1;
+  			}
+  			if (got)
+  			{
+  				memcpy(&clientaddrInputs, &newest, sizeof(newest));
+  				clilen = newestLen;
+  				len = 1;
+  			}
   		}
 		
   		if (len > 0 || isConnectedInputs)
